@@ -1,0 +1,153 @@
+Organizations:
+  - &HospitalMSP
+    Name: HospitalMSP
+    ID: HospitalMSP
+    MSPDir: crypto-config/peerOrganizations/hospital.com/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('HospitalMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('HospitalMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('HospitalMSP.admin')"
+
+    AnchorPeers:
+      - Host: peer0.hospital.com
+        Port: 7051
+
+  - &DoctorMSP
+    Name: DoctorMSP
+    ID: DoctorMSP
+    MSPDir: crypto-config/peerOrganizations/doctor.com/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('DoctorMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('DoctorMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('DoctorMSP.admin')"
+
+    AnchorPeers:
+      - Host: peer0.doctor.com
+        Port: 7051
+
+  - &PatientMSP
+    Name: PatientMSP
+    ID: PatientMSP
+    MSPDir: crypto-config/peerOrganizations/patient.com/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('PatientMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('PatientMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('PatientMSP.admin')"
+
+    AnchorPeers:
+      - Host: peer0.patient.com
+        Port: 7051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Application: &ApplicationDefaults
+  Organizations:
+    - *HospitalMSP
+    - *DoctorMSP
+    - *PatientMSP
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: solo
+  Addresses:
+    - orderer.example.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+    - *HospitalMSP
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "MAJORITY BlockValidation"
+  Capabilities:
+    <<: *OrdererCapabilities
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  MedicalChannel:
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *HospitalMSP
+        - *DoctorMSP
+        - *PatientMSP
+      Capabilities:
+        <<: *ApplicationCapabilities
+
+  OrdererSolo:
+    <<: *OrdererDefaults
+    OrdererType: solo
+    Organizations:
+      - *HospitalMSP
+    Capabilities:
+      <<: *OrdererCapabilities
