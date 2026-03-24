@@ -1,0 +1,266 @@
+version: '3.8'
+
+networks:
+  fabric_network:
+    name: fabric_network
+
+volumes:
+  hospital_ledger:
+  doctor_ledger:
+  patient_ledger:
+  peer0.hospital.com:
+  peer0.doctor.com:
+  peer0.patient.com:
+
+services:
+  ca.hospital.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.hospital.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.hospital.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.hospital.com-key.pem
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw'
+    volumes:
+      - ./crypto-config/peerOrganizations/hospital.com/ca/:/etc/hyperledger/fabric-ca-server/
+      - ./crypto-config/peerOrganizations/hospital.com/tlsca/:/etc/hyperledger/fabric-ca-server-tls/
+    container_name: ca.hospital.com
+    networks:
+      - fabric_network
+
+  ca.doctor.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.doctor.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.doctor.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.doctor.com-key.pem
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw'
+    volumes:
+      - ./crypto-config/peerOrganizations/doctor.com/ca/:/etc/hyperledger/fabric-ca-server/
+      - ./crypto-config/peerOrganizations/doctor.com/tlsca/:/etc/hyperledger/fabric-ca-server-tls/
+    container_name: ca.doctor.com
+    networks:
+      - fabric_network
+
+  ca.patient.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.patient.com
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.patient.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.patient.com-key.pem
+    ports:
+      - "9054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw'
+    volumes:
+      - ./crypto-config/peerOrganizations/patient.com/ca/:/etc/hyperledger/fabric-ca-server/
+      - ./crypto-config/peerOrganizations/patient.com/tlsca/:/etc/hyperledger/fabric-ca-server-tls/
+    container_name: ca.patient.com
+    networks:
+      - fabric_network
+
+  orderer.example.com:
+    image: hyperledger/fabric-orderer:latest
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_KAFKA_TOPIC_REPLICATIONFACTOR=1
+      - ORDERER_KAFKA_SSL_ENABLED=false
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
+    command: orderer
+    ports:
+      - "7050:7050"
+    volumes:
+      - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ./crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+      - ./crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+    container_name: orderer.example.com
+    networks:
+      - fabric_network
+
+  peer0.hospital.com:
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_network
+      - CORE_PEER_ID=peer0.hospital.com
+      - CORE_PEER_ADDRESS=peer0.hospital.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hospital.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hospital.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hospital.com:7051
+      - CORE_PEER_LOCALMSPID=HospitalMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.hospital.com:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password
+      - CORE_LOGGING_LEVEL=INFO
+      - CORE_SECURITY_ENABLED=false
+      - CORE_TLS_ENABLED=false
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - "7051:7051"
+      - "7052:7052"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/hospital.com/peers/peer0.hospital.com/msp:/etc/hyperledger/fabric/peer/msp
+      - ./crypto-config/peerOrganizations/hospital.com/peers/peer0.hospital.com/tls:/etc/hyperledger/fabric/peer/tls
+      - peer0.hospital.com:/var/hyperledger/production
+    container_name: peer0.hospital.com
+    networks:
+      - fabric_network
+    depends_on:
+      - couchdb.hospital.com
+
+  couchdb.hospital.com:
+    image: couchdb:3.1.1
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    ports:
+      - "5984:5984"
+    container_name: couchdb.hospital.com
+    networks:
+      - fabric_network
+
+  peer0.doctor.com:
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_network
+      - CORE_PEER_ID=peer0.doctor.com
+      - CORE_PEER_ADDRESS=peer0.doctor.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.doctor.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.doctor.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.doctor.com:7051
+      - CORE_PEER_LOCALMSPID=DoctorMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.doctor.com:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password
+      - CORE_LOGGING_LEVEL=INFO
+      - CORE_SECURITY_ENABLED=false
+      - CORE_TLS_ENABLED=false
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - "8051:7051"
+      - "8052:7052"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/doctor.com/peers/peer0.doctor.com/msp:/etc/hyperledger/fabric/peer/msp
+      - ./crypto-config/peerOrganizations/doctor.com/peers/peer0.doctor.com/tls:/etc/hyperledger/fabric/peer/tls
+      - peer0.doctor.com:/var/hyperledger/production
+    container_name: peer0.doctor.com
+    networks:
+      - fabric_network
+    depends_on:
+      - couchdb.doctor.com
+
+  couchdb.doctor.com:
+    image: couchdb:3.1.1
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    ports:
+      - "6984:5984"
+    container_name: couchdb.doctor.com
+    networks:
+      - fabric_network
+
+  peer0.patient.com:
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_network
+      - CORE_PEER_ID=peer0.patient.com
+      - CORE_PEER_ADDRESS=peer0.patient.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.patient.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.patient.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.patient.com:7051
+      - CORE_PEER_LOCALMSPID=PatientMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.patient.com:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=password
+      - CORE_LOGGING_LEVEL=INFO
+      - CORE_SECURITY_ENABLED=false
+      - CORE_TLS_ENABLED=false
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - "9051:7051"
+      - "9052:7052"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/patient.com/peers/peer0.patient.com/msp:/etc/hyperledger/fabric/peer/msp
+      - ./crypto-config/peerOrganizations/patient.com/peers/peer0.patient.com/tls:/etc/hyperledger/fabric/peer/tls
+      - peer0.patient.com:/var/hyperledger/production
+    container_name: peer0.patient.com
+    networks:
+      - fabric_network
+    depends_on:
+      - couchdb.patient.com
+
+  couchdb.patient.com:
+    image: couchdb:3.1.1
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    ports:
+      - "7984:5984"
+    container_name: couchdb.patient.com
+    networks:
+      - fabric_network
+
+  cli:
+    image: hyperledger/fabric-peer:latest
+    container_name: cli
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_LOGGING_LEVEL=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.hospital.com:7051
+      - CORE_PEER_LOCALMSPID=HospitalMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
+      - CORE_PEER_TLS_ENABLED=false
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/hospital.com/peers/peer0.hospital.com/msp:/etc/hyperledger/fabric/peer/msp
+      - ./channel-artifacts/:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    networks:
+      - fabric_network
+    depends_on:
+      - peer0.hospital.com
