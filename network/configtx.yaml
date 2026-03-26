@@ -1,4 +1,20 @@
 Organizations:
+  - &OrdererOrg
+    Name: OrdererMSP
+    ID: OrdererMSP
+    MSPDir: crypto-config/ordererOrganizations/example.com/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
   - &HospitalMSP
     Name: HospitalMSP
     ID: HospitalMSP
@@ -101,7 +117,7 @@ Orderer: &OrdererDefaults
     AbsoluteMaxBytes: 99 MB
     PreferredMaxBytes: 512 KB
   Organizations:
-    - *HospitalMSP
+    - *OrdererOrg
   Policies:
     Readers:
       Type: ImplicitMeta
@@ -148,6 +164,6 @@ Profiles:
     <<: *OrdererDefaults
     OrdererType: solo
     Organizations:
-      - *HospitalMSP
+      - *OrdererOrg
     Capabilities:
       <<: *OrdererCapabilities
