@@ -76,3 +76,36 @@ func (c *MedicalContract) CreatePatientRecord(ctx contractapi.TransactionContext
     }
     return ctx.GetStub().PutState(patientId, recordBytes)
 }
+
+func (c *MedicalContract) GiveConsent(ctx contractapi.TransactionContextInterface,
+    patientId, doctorId string) error {
+
+    mspID, err := ctx.GetClientIdentity().GetMSPID()
+    if err != nil {
+        return fmt.Errorf("failed to get MSP ID: %v", err)
+    }
+    if mspID != "PatientMSP" {
+        return fmt.Errorf("unauthorized: only PatientMSP can grant consent")
+    }
+
+    recordBytes, err := ctx.GetStub().GetState(patientId)
+    if err != nil {
+        return fmt.Errorf("failed to retrieve patient record: %v", err)
+    }
+    if recordBytes == nil {
+        return fmt.Errorf("patient record %s does not exist", patientId)
+    }
+
+    var record PatientRecord
+    if err := json.Unmarshal(recordBytes, &record); err != nil {
+        return fmt.Errorf("failed to unmarshal patient record: %v", err)
+    }
+
+    record.ConsentGiven[doctorId] = true
+
+    updatedBytes, err := json.Marshal(record)
+    if err != nil {
+        return fmt.Errorf("failed to marshal patient record: %v", err)
+    }
+    return ctx.GetStub().PutState(patientId, updatedBytes)
+}
