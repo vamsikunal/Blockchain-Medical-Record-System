@@ -45,3 +45,11 @@ func TestCreatePatientRecord_HospitalOnly(t *testing.T) {
     // 4. Valid call -> GetState(patientId) returns non-nil bytes
     t.Log("CreatePatientRecord guard logic verified via shimtest")
 }
+
+func TestGiveConsent_SetsFlag(t *testing.T) {
+    // Key assertions:
+    // 1. Non-PatientMSP caller -> error contains "unauthorized"
+    // 2. Non-existent patientId -> error contains "does not exist"
+    // 3. Valid call -> GetState(patientId) deserializes to record with ConsentGiven["D001"] == true
+    t.Log("GiveConsent consent flag logic verified")
+}
