@@ -1,6 +1,9 @@
 package main
 
 import (
+    "encoding/json"
+    "fmt"
+    "strconv"
     "time"
     "github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -31,4 +34,45 @@ type UpdateEntry struct {
 
 func getTimestamp() string {
     return time.Now().UTC().Format(time.RFC3339)
+}
+
+func (c *MedicalContract) CreatePatientRecord(ctx contractapi.TransactionContextInterface,
+    patientId, name, ageStr, diagnosis string) error {
+
+    mspID, err := ctx.GetClientIdentity().GetMSPID()
+    if err != nil {
+        return fmt.Errorf("failed to get MSP ID: %v", err)
+    }
+    if mspID != "HospitalMSP" {
+        return fmt.Errorf("unauthorized: only HospitalMSP can create records")
+    }
+
+    existing, err := ctx.GetStub().GetState(patientId)
+    if err != nil {
+        return fmt.Errorf("failed to retrieve patient record: %v", err)
+    }
+    if existing != nil {
+        return fmt.Errorf("patient record %s already exists", patientId)
+    }
+
+    age, err := strconv.Atoi(ageStr)
+    if err != nil {
+        return fmt.Errorf("invalid age value: %v", err)
+    }
+
+    record := PatientRecord{
+        PatientID:    patientId,
+        Name:         name,
+        Age:          age,
+        Diagnosis:    diagnosis,
+        CreatedAt:    getTimestamp(),
+        Updates:      []UpdateEntry{},
+        ConsentGiven: map[string]bool{},
+    }
+
+    recordBytes, err := json.Marshal(record)
+    if err != nil {
+        return fmt.Errorf("failed to marshal patient record: %v", err)
+    }
+    return ctx.GetStub().PutState(patientId, recordBytes)
 }
