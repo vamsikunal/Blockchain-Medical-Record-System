@@ -109,3 +109,52 @@ func (c *MedicalContract) GiveConsent(ctx contractapi.TransactionContextInterfac
     }
     return ctx.GetStub().PutState(patientId, updatedBytes)
 }
+
+func (c *MedicalContract) UpdateMedicalRecord(ctx contractapi.TransactionContextInterface,
+    patientId, updateData string) error {
+
+    mspID, err := ctx.GetClientIdentity().GetMSPID()
+    if err != nil {
+        return fmt.Errorf("failed to get MSP ID: %v", err)
+    }
+    if mspID != "DoctorMSP" {
+        return fmt.Errorf("unauthorized: only DoctorMSP can update records")
+    }
+
+    doctorID, err := ctx.GetClientIdentity().GetID()
+    if err != nil {
+        return fmt.Errorf("failed to get caller identity: %v", err)
+    }
+
+    recordBytes, err := ctx.GetStub().GetState(patientId)
+    if err != nil {
+        return fmt.Errorf("failed to retrieve patient record: %v", err)
+    }
+    if recordBytes == nil {
+        return fmt.Errorf("patient record %s does not exist", patientId)
+    }
+
+    var record PatientRecord
+    if err := json.Unmarshal(recordBytes, &record); err != nil {
+        return fmt.Errorf("failed to unmarshal patient record: %v", err)
+    }
+
+    if !record.ConsentGiven[doctorID] {
+        return fmt.Errorf("unauthorized: doctor %s does not have consent from patient %s",
+            doctorID, patientId)
+    }
+
+    entry := UpdateEntry{
+        DoctorID:      doctorID,
+        Data:          updateData,
+        Timestamp:     getTimestamp(),
+        TransactionID: ctx.GetStub().GetTxID(),
+    }
+    record.Updates = append(record.Updates, entry)
+
+    updatedBytes, err := json.Marshal(record)
+    if err != nil {
+        return fmt.Errorf("failed to marshal patient record: %v", err)
+    }
+    return ctx.GetStub().PutState(patientId, updatedBytes)
+}
