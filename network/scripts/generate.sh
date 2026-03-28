@@ -7,6 +7,15 @@ NETWORK_DIR="$(dirname "$SCRIPT_DIR")"
 ARTIFACTS_DIR="$NETWORK_DIR/channel-artifacts"
 CRYPTO_DIR="$NETWORK_DIR/crypto-config"
 
+echo "=== Checking required binaries ==="
+
+# Check for required Hyperledger Fabric binaries
+command -v cryptogen >/dev/null || { echo "❌ cryptogen not found. Please install Hyperledger Fabric binaries."; exit 1; }
+command -v configtxgen >/dev/null || { echo "❌ configtxgen not found. Please install Hyperledger Fabric binaries."; exit 1; }
+
+echo "✅ All required binaries found"
+echo ""
+
 echo "=== Generating Crypto Material ==="
 
 # Clean up existing crypto material

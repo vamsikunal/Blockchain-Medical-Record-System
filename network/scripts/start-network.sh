@@ -24,7 +24,11 @@ echo ""
 
 # Step 3: Create the channel
 echo "[3/4] Creating channel 'medicalchannel'..."
-docker exec -e "CORE_PEER_ADDRESS=peer0.hospital.com:7051" -e "CORE_PEER_LOCALMSPID=HospitalMSP" -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp" cli peer channel create -o orderer.example.com:7050 -c medicalchannel -f ./channel-artifacts/medicalchannel.tx --outputBlock ./channel-artifacts/medicalchannel.block
+docker exec -e "CORE_PEER_ADDRESS=peer0.hospital.com:7051" \
+  -e "CORE_PEER_LOCALMSPID=HospitalMSP" \
+  -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp" \
+  cli peer channel create -o orderer.example.com:7050 -c medicalchannel \
+  -f ./channel-artifacts/medicalchannel.tx --outputBlock ./channel-artifacts/medicalchannel.block
 echo "Channel created!"
 echo ""
 
@@ -33,15 +37,24 @@ echo "[4/4] Joining peers to channel..."
 
 # Hospital peer
 echo "Joining peer0.hospital.com to medicalchannel..."
-docker exec -e "CORE_PEER_ADDRESS=peer0.hospital.com:7051" -e "CORE_PEER_LOCALMSPID=HospitalMSP" -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp" cli peer channel join -b ./channel-artifacts/medicalchannel.block
+docker exec -e "CORE_PEER_ADDRESS=peer0.hospital.com:7051" \
+  -e "CORE_PEER_LOCALMSPID=HospitalMSP" \
+  -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp" \
+  cli peer channel join -b ./channel-artifacts/medicalchannel.block
 
 # Doctor peer
 echo "Joining peer0.doctor.com to medicalchannel..."
-docker exec -e "CORE_PEER_ADDRESS=peer0.doctor.com:7051" -e "CORE_PEER_LOCALMSPID=DoctorMSP" -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp" cli peer channel join -b ./channel-artifacts/medicalchannel.block
+docker exec -e "CORE_PEER_ADDRESS=peer0.doctor.com:7051" \
+  -e "CORE_PEER_LOCALMSPID=DoctorMSP" \
+  -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/doctor/msp" \
+  cli peer channel join -b ./channel-artifacts/medicalchannel.block
 
 # Patient peer
 echo "Joining peer0.patient.com to medicalchannel..."
-docker exec -e "CORE_PEER_ADDRESS=peer0.patient.com:7051" -e "CORE_PEER_LOCALMSPID=PatientMSP" -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp" cli peer channel join -b ./channel-artifacts/medicalchannel.block
+docker exec -e "CORE_PEER_ADDRESS=peer0.patient.com:7051" \
+  -e "CORE_PEER_LOCALMSPID=PatientMSP" \
+  -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/patient/msp" \
+  cli peer channel join -b ./channel-artifacts/medicalchannel.block
 
 echo ""
 echo "=== Network is up. ==="
@@ -52,4 +65,7 @@ echo "To enter the CLI container:"
 echo "  docker exec -it cli bash"
 echo ""
 echo "To check channel membership:"
-echo "  docker exec -e \"CORE_PEER_ADDRESS=peer0.hospital.com:7051\" -e \"CORE_PEER_LOCALMSPID=HospitalMSP\" -e \"CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp\" cli peer channel list"
+echo "  docker exec -e \"CORE_PEER_ADDRESS=peer0.hospital.com:7051\" \\"
+echo "    -e \"CORE_PEER_LOCALMSPID=HospitalMSP\" \\"
+echo "    -e \"CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp\" \\"
+echo "    cli peer channel list"
