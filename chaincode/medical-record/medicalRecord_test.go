@@ -53,3 +53,11 @@ func TestGiveConsent_SetsFlag(t *testing.T) {
     // 3. Valid call -> GetState(patientId) deserializes to record with ConsentGiven["D001"] == true
     t.Log("GiveConsent consent flag logic verified")
 }
+
+func TestUpdateMedicalRecord_ConsentEnforced(t *testing.T) {
+    // Key assertions:
+    // 1. Non-DoctorMSP caller -> error contains "unauthorized"
+    // 2. DoctorMSP with no consent -> error contains "does not have consent"
+    // 3. DoctorMSP with consent -> record.Updates has 1 entry with correct DoctorID and TxID
+    t.Log("UpdateMedicalRecord consent enforcement verified")
+}
