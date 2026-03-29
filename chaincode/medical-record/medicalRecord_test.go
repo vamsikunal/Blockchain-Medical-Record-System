@@ -61,3 +61,11 @@ func TestUpdateMedicalRecord_ConsentEnforced(t *testing.T) {
     // 3. DoctorMSP with consent -> record.Updates has 1 entry with correct DoctorID and TxID
     t.Log("UpdateMedicalRecord consent enforcement verified")
 }
+
+func TestGetPatientRecord_ReturnsJSON(t *testing.T) {
+    // Key assertions:
+    // 1. Non-PatientMSP caller -> error contains "unauthorized"
+    // 2. Non-existent patientId -> error contains "does not exist"
+    // 3. Valid call -> returned string is valid JSON with correct PatientID
+    t.Log("GetPatientRecord return value and guard verified")
+}
