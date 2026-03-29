@@ -158,3 +158,24 @@ func (c *MedicalContract) UpdateMedicalRecord(ctx contractapi.TransactionContext
     }
     return ctx.GetStub().PutState(patientId, updatedBytes)
 }
+
+func (c *MedicalContract) GetPatientRecord(ctx contractapi.TransactionContextInterface,
+    patientId string) (string, error) {
+
+    mspID, err := ctx.GetClientIdentity().GetMSPID()
+    if err != nil {
+        return "", fmt.Errorf("failed to get MSP ID: %v", err)
+    }
+    if mspID != "PatientMSP" {
+        return "", fmt.Errorf("unauthorized: only PatientMSP can view records")
+    }
+
+    recordBytes, err := ctx.GetStub().GetState(patientId)
+    if err != nil {
+        return "", fmt.Errorf("failed to retrieve patient record: %v", err)
+    }
+    if recordBytes == nil {
+        return "", fmt.Errorf("patient record %s does not exist", patientId)
+    }
+    return string(recordBytes), nil
+}
