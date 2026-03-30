@@ -32,6 +32,7 @@ type UpdateEntry struct {
     TransactionID string `json:"txId,omitempty"`
 }
 
+// getTimestamp is a helper function to get current UTC time
 func getTimestamp() string {
     return time.Now().UTC().Format(time.RFC3339)
 }
