@@ -105,3 +105,38 @@ Blockchain-Medical-Record-System/
 │   └── query/                  # Query result logs
 └── README.md
 ```
+
+## Chaincode Deployment
+
+### Package
+```bash
+peer lifecycle chaincode package medicalrecord.tar.gz \
+  --path ./chaincode/medical-record \
+  --lang golang \
+  --label medicalrecord_1.0
+```
+### Install on Each Peer (run per org)
+```bash
+peer lifecycle chaincode install medicalrecord.tar.gz
+```
+### Get Package ID
+```bash
+peer lifecycle chaincode queryinstalled
+```
+### Approve for Each Org
+```bash
+peer lifecycle chaincode approveformyorg \
+  -o orderer.example.com:7050 \
+  -C medicalchannel -n medicalrecord \
+  --version 1.0 --package-id <PACKAGE_ID> --sequence 1
+```
+### Commit to Channel
+```bash
+peer lifecycle chaincode commit \
+  -o orderer.example.com:7050 \
+  -C medicalchannel -n medicalrecord \
+  --version 1.0 --sequence 1 \
+  --peerAddresses peer0.hospital.com:7051 \
+  --peerAddresses peer0.doctor.com:7051 \
+  --peerAddresses peer0.patient.com:7051
+```
