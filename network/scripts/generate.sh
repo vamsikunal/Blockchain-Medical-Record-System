@@ -7,57 +7,63 @@ NETWORK_DIR="$(dirname "$SCRIPT_DIR")"
 ARTIFACTS_DIR="$NETWORK_DIR/channel-artifacts"
 CRYPTO_DIR="$NETWORK_DIR/crypto-config"
 
-echo "=== Checking required binaries ==="
+# CLEANUP — stop containers, remove volumes, prune network, delete old files
+echo "Cleaning up existing Docker resources"
 
-# Check for required Hyperledger Fabric binaries
-command -v cryptogen >/dev/null || { echo "❌ cryptogen not found. Please install Hyperledger Fabric binaries."; exit 1; }
-command -v configtxgen >/dev/null || { echo "❌ configtxgen not found. Please install Hyperledger Fabric binaries."; exit 1; }
+# Stop and remove all containers, networks, and volumes defined in docker-compose.yaml
+echo "Running docker-compose down -v to wipe existing state..."
+if [ -f "$NETWORK_DIR/docker-compose.yaml" ]; then
+    (cd "$NETWORK_DIR" && docker-compose down -v --remove-orphans 2>/dev/null) || true
+fi
 
-echo "✅ All required binaries found"
+# Remove any leftover chaincode containers/images
+echo "Removing dev-* chaincode containers/images..."
+docker rm -f $(docker ps -aq --filter "name=dev-") 2>/dev/null || true
+docker rmi -f $(docker images --filter "reference=dev-*" -q) 2>/dev/null || true
+
+# Remove the fabric_network Docker network
+echo "Removing fabric_network Docker network..."
+docker network rm fabric_network 2>/dev/null && echo "  Removed network: fabric_network" || true
+
+echo "Docker cleanup done."
 echo ""
 
-echo "=== Generating Crypto Material ==="
+# Check for required Hyperledger Fabric binaries
+echo "Checking required binaries"
+command -v cryptogen  >/dev/null || { echo "cryptogen not found. Please install Hyperledger Fabric binaries."; exit 1; }
+command -v configtxgen >/dev/null || { echo "configtxgen not found. Please install Hyperledger Fabric binaries."; exit 1; }
+echo "All required binaries found."
+echo ""
 
-# Clean up existing crypto material
+echo "Generating Crypto Material"
+
 if [ -d "$CRYPTO_DIR" ]; then
     echo "Removing existing crypto-config directory..."
     rm -rf "$CRYPTO_DIR"
 fi
 
-# Generate crypto material using cryptogen
 cd "$NETWORK_DIR"
 cryptogen generate --config=crypto-config.yaml
 echo "Crypto material generated successfully!"
-
 echo ""
-echo "=== Generating Channel Artifacts ==="
 
-# Clean up existing artifacts
+echo "Generating Channel Artifacts"
+
 if [ -d "$ARTIFACTS_DIR" ]; then
+    echo "Removing existing channel-artifacts directory..."
     rm -rf "$ARTIFACTS_DIR"
 fi
 mkdir -p "$ARTIFACTS_DIR"
 
-# Generate genesis block for the orderer
 export FABRIC_CFG_PATH=$NETWORK_DIR
-configtxgen -profile OrdererSolo -outputBlock "$ARTIFACTS_DIR/genesis.block"
-echo "Genesis block created!"
+echo "FABRIC_CFG_PATH set to: $FABRIC_CFG_PATH"
 
-# Generate channel transaction for medicalchannel
-configtxgen -profile MedicalChannel -outputCreateChannelTx "$ARTIFACTS_DIR/medicalchannel.tx" -channelID medicalchannel
-echo "Channel transaction created!"
-
-# Generate anchor peer transactions for each org
-configtxgen -profile MedicalChannel -outputAnchorPeersUpdate "$ARTIFACTS_DIR/HospitalMSPanchors.tx" -channelID medicalchannel -asOrg HospitalMSP
-echo "HospitalMSP anchor peer transaction created!"
-
-configtxgen -profile MedicalChannel -outputAnchorPeersUpdate "$ARTIFACTS_DIR/DoctorMSPanchors.tx" -channelID medicalchannel -asOrg DoctorMSP
-echo "DoctorMSP anchor peer transaction created!"
-
-configtxgen -profile MedicalChannel -outputAnchorPeersUpdate "$ARTIFACTS_DIR/PatientMSPanchors.tx" -channelID medicalchannel -asOrg PatientMSP
-echo "PatientMSP anchor peer transaction created!"
+configtxgen -profile MedicalChannel \
+    -outputBlock "$ARTIFACTS_DIR/medicalchannel.block" \
+    -channelID medicalchannel
+echo "Channel genesis block created!"
 
 echo ""
-echo "=== All artifacts generated successfully! ==="
+echo "All artifacts generated successfully!"
 echo "Output directory: $ARTIFACTS_DIR"
 ls -la "$ARTIFACTS_DIR"

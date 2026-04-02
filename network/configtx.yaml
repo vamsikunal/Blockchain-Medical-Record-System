@@ -1,9 +1,11 @@
+# Copyright IBM Corp. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 Organizations:
   - &OrdererOrg
     Name: OrdererMSP
     ID: OrdererMSP
     MSPDir: crypto-config/ordererOrganizations/example.com/msp
-
     Policies:
       Readers:
         Type: Signature
@@ -14,12 +16,16 @@ Organizations:
       Admins:
         Type: Signature
         Rule: "OR('OrdererMSP.admin')"
+      BlockValidation:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+    OrdererEndpoints:
+      - orderer.example.com:7050
 
   - &HospitalMSP
     Name: HospitalMSP
     ID: HospitalMSP
     MSPDir: crypto-config/peerOrganizations/hospital.com/msp
-
     Policies:
       Readers:
         Type: Signature
@@ -30,7 +36,9 @@ Organizations:
       Admins:
         Type: Signature
         Rule: "OR('HospitalMSP.admin')"
-
+      Endorsement:
+        Type: Signature
+        Rule: "OR('HospitalMSP.member')"
     AnchorPeers:
       - Host: peer0.hospital.com
         Port: 7051
@@ -39,7 +47,6 @@ Organizations:
     Name: DoctorMSP
     ID: DoctorMSP
     MSPDir: crypto-config/peerOrganizations/doctor.com/msp
-
     Policies:
       Readers:
         Type: Signature
@@ -50,7 +57,9 @@ Organizations:
       Admins:
         Type: Signature
         Rule: "OR('DoctorMSP.admin')"
-
+      Endorsement:
+        Type: Signature
+        Rule: "OR('DoctorMSP.member')"
     AnchorPeers:
       - Host: peer0.doctor.com
         Port: 7051
@@ -59,7 +68,6 @@ Organizations:
     Name: PatientMSP
     ID: PatientMSP
     MSPDir: crypto-config/peerOrganizations/patient.com/msp
-
     Policies:
       Readers:
         Type: Signature
@@ -70,7 +78,9 @@ Organizations:
       Admins:
         Type: Signature
         Rule: "OR('PatientMSP.admin')"
-
+      Endorsement:
+        Type: Signature
+        Rule: "OR('PatientMSP.member')"
     AnchorPeers:
       - Host: peer0.patient.com
         Port: 7051
@@ -81,13 +91,10 @@ Capabilities:
   Orderer: &OrdererCapabilities
     V2_0: true
   Application: &ApplicationCapabilities
-    V2_0: true
+    V2_5: true
 
 Application: &ApplicationDefaults
-  Organizations:
-    - *HospitalMSP
-    - *DoctorMSP
-    - *PatientMSP
+  Organizations: []
   Policies:
     Readers:
       Type: ImplicitMeta
@@ -108,7 +115,7 @@ Application: &ApplicationDefaults
     <<: *ApplicationCapabilities
 
 Orderer: &OrdererDefaults
-  OrdererType: solo
+  OrdererType: etcdraft
   Addresses:
     - orderer.example.com:7050
   BatchTimeout: 2s
@@ -116,6 +123,12 @@ Orderer: &OrdererDefaults
     MaxMessageCount: 10
     AbsoluteMaxBytes: 99 MB
     PreferredMaxBytes: 512 KB
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.example.com
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
   Organizations:
     - *OrdererOrg
   Policies:
@@ -149,21 +162,30 @@ Channel: &ChannelDefaults
     <<: *ChannelCapabilities
 
 Profiles:
-  MedicalChannel:
+  # System channel profile - for orderer genesis (includes both Orderer and Application)
+  SystemChannel:
     <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
     Application:
       <<: *ApplicationDefaults
       Organizations:
         - *HospitalMSP
         - *DoctorMSP
         - *PatientMSP
-      Capabilities:
-        <<: *ApplicationCapabilities
 
-  OrdererSolo:
-    <<: *OrdererDefaults
-    OrdererType: solo
-    Organizations:
-      - *OrdererOrg
-    Capabilities:
-      <<: *OrdererCapabilities
+  # Application channel profile - for creating application channel via channel participation
+  MedicalChannel:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *HospitalMSP
+        - *DoctorMSP
+        - *PatientMSP
