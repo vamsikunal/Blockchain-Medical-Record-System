@@ -49,3 +49,5 @@ coverage/
 *.md~
 *.log.*
 docs/
+*.txt
+*.bin

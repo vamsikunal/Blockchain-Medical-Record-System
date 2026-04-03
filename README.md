@@ -23,8 +23,10 @@ State database: CouchDB.
    cd Blockchain-Medical-Record-System
    ```
 
-2. **Generate crypto material and channel artifacts**
+2. **Wipe existing data and generate crypto material**
    ```bash
+   cd network
+   docker-compose down -v --remove-orphans
    bash network/scripts/generate.sh
    ```
 
@@ -34,32 +36,32 @@ State database: CouchDB.
    ```
 
    This will:
-   - Generate crypto material for 3 organizations (Hospital, Doctor, Patient)
-   - Create channel artifacts (genesis block, channel transaction)
    - Start all Docker containers (3 peers, 3 CouchDB instances, 1 orderer, 3 CAs, CLI)
    - Create channel `medicalchannel`
    - Join all 3 peers to the channel
 
-4. **Verify the network**
+4. **Deploy the Chaincode (CCaaS)**
    ```bash
-   docker ps
-   # Should show: 3 peers + 3 CouchDB + 1 orderer + 3 CAs + CLI
+   cd ../scripts
+   bash deploy-chaincode.sh
    ```
 
-5. **Enter the CLI container**
+   This script automatically:
+   - Packages `connection.json` and installs it on peers
+   - Builds the Go chaincode as an external Docker container (`medicalrecord-ccaas`)
+   - Approves and Commits the chaincode on the channel
+   - Initializes the ledger
+
+5. **Run the Test Suite**
+   Verify the medical record functions (create, read, doctor consent loops) across the 3 independent peers:
+
    ```bash
-   docker exec -it cli bash
+   bash test-all.sh
    ```
 
-6. **Check channel membership**
-   ```bash
-   docker exec -e "CORE_PEER_ADDRESS=peer0.hospital.com:7051" \
-     -e "CORE_PEER_LOCALMSPID=HospitalMSP" \
-     -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp" \
-     cli peer channel list
-   ```
+---
 
-### Network Architecture
+## Network Architecture
 
 | Organization | Peer | CouchDB | CA |
 |--------------|------|---------|-----|
@@ -98,45 +100,10 @@ Blockchain-Medical-Record-System/
 │   └── channel-artifacts/      # Generated blocks and transactions
 ├── chaincode/medical-record/   # Go smart contract
 ├── scripts/
+│   ├── deploy-chaincode.sh     # **NEW** CCaaS automated deployment
+│   ├── test-all.sh             # Integration test suite
+│   ├── env.sh                  # MSP and environment variables
 │   ├── invoke/                 # Chaincode invoke scripts
 │   └── query/                  # Chaincode query scripts
-├── logs/
-│   ├── invoke/                 # Invoke transaction logs
-│   └── query/                  # Query result logs
-└── README.md
-```
-
-## Chaincode Deployment
-
-### Package
-```bash
-peer lifecycle chaincode package medicalrecord.tar.gz \
-  --path ./chaincode/medical-record \
-  --lang golang \
-  --label medicalrecord_1.0
-```
-### Install on Each Peer (run per org)
-```bash
-peer lifecycle chaincode install medicalrecord.tar.gz
-```
-### Get Package ID
-```bash
-peer lifecycle chaincode queryinstalled
-```
-### Approve for Each Org
-```bash
-peer lifecycle chaincode approveformyorg \
-  -o orderer.example.com:7050 \
-  -C medicalchannel -n medicalrecord \
-  --version 1.0 --package-id <PACKAGE_ID> --sequence 1
-```
-### Commit to Channel
-```bash
-peer lifecycle chaincode commit \
-  -o orderer.example.com:7050 \
-  -C medicalchannel -n medicalrecord \
-  --version 1.0 --sequence 1 \
-  --peerAddresses peer0.hospital.com:7051 \
-  --peerAddresses peer0.doctor.com:7051 \
-  --peerAddresses peer0.patient.com:7051
+├── README.md
 ```
