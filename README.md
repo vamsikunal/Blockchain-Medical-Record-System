@@ -27,12 +27,12 @@ State database: CouchDB.
    ```bash
    cd network
    docker-compose down -v --remove-orphans
-   bash network/scripts/generate.sh
+   bash scripts/generate.sh
    ```
 
 3. **Start the network**
    ```bash
-   bash network/scripts/start-network.sh
+   bash scripts/start-network.sh
    ```
 
    This will:

@@ -6,7 +6,7 @@ export PEER_DOCTOR=localhost:8051
 export PEER_PATIENT=localhost:9051
 
 # Fabric config path (required by peer binary)
-export FABRIC_CFG_PATH=/home/prasun/fabric-samples/config
+export FABRIC_CFG_PATH=/home/$USER/fabric-samples/config
 
 # Ensure TLS is enabled for test scripts
 export CORE_PEER_TLS_ENABLED=true

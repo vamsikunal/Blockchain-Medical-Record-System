@@ -7,7 +7,7 @@ CHAINCODE_DIR="$(cd "$SCRIPT_DIR/../chaincode/medical-record" && pwd)"
 
 source "$SCRIPT_DIR/env.sh"
 
-export FABRIC_CFG_PATH="/home/prasun/fabric-samples/config"
+export FABRIC_CFG_PATH="/home/$USER/fabric-samples/config"
 export CC_NAME=${CHAINCODE:-medicalrecord}
 export CC_VERSION="1.0"
 export CC_SEQUENCE=1

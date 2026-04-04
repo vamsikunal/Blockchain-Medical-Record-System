@@ -7,7 +7,7 @@ NETWORK_DIR="$(dirname "$SCRIPT_DIR")"
 ARTIFACTS_DIR="$NETWORK_DIR/channel-artifacts"
 
 # FABRIC_CFG_PATH for peer CLI needs core.yaml (fabric-samples/config has it)
-PEER_CFG_PATH="/home/prasun/fabric-samples/config"
+PEER_CFG_PATH="/home/$USER/fabric-samples/config"
 
 echo "=== Medical Record Network Startup ==="
 echo ""

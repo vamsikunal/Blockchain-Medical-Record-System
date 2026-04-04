@@ -114,34 +114,37 @@ assert_contains() {
 }
 
 # ── Test suite ────────────────────────────────────────────────────────────────
+PID="P$(date +%s)$RANDOM"
+PID2="P2$(date +%s)$RANDOM"
+
 log "=== Test Suite: Medical Record Chaincode ==="
 log "    Logs: $LOG_DIR"
 log ""
 
-log "[1] Hospital creates patient record P001"
-OUT=$(invoke Hospital CreatePatientRecord '["P001","John Doe","35","Hypertension"]')
-assert_success "Hospital creates P001" "$OUT"
+log "[1] Hospital creates patient record ${PID}"
+OUT=$(invoke Hospital CreatePatientRecord "[\"${PID}\",\"John Doe\",\"35\",\"Hypertension\"]")
+assert_success "Hospital creates ${PID}" "$OUT"
 
 log "[2] Doctor attempts update without consent"
-OUT=$(invoke Doctor UpdateMedicalRecord '["P001","Blood pressure stable"]')
+OUT=$(invoke Doctor UpdateMedicalRecord "[\"${PID}\",\"Blood pressure stable\"]")
 assert_failure "Doctor rejected without consent" "consent|unauthorized|Error|failed" "$OUT"
 
 log "[3] Patient grants consent to Doctor Admin"
-OUT=$(invoke Patient GiveConsent '["P001","eDUwOTo6Q049QWRtaW5AZG9jdG9yLmNvbSxPVT1hZG1pbixMPVNhbiBGcmFuY2lzY28sU1Q9Q2FsaWZvcm5pYSxDPVVTOjpDTj1jYS5kb2N0b3IuY29tLE89ZG9jdG9yLmNvbSxMPVNhbiBGcmFuY2lzY28sU1Q9Q2FsaWZvcm5pYSxDPVVT"]')
+OUT=$(invoke Patient GiveConsent "[\"${PID}\",\"eDUwOTo6Q049QWRtaW5AZG9jdG9yLmNvbSxPVT1hZG1pbixMPVNhbiBGcmFuY2lzY28sU1Q9Q2FsaWZvcm5pYSxDPVVTOjpDTj1jYS5kb2N0b3IuY29tLE89ZG9jdG9yLmNvbSxMPVNhbiBGcmFuY2lzY28sU1Q9Q2FsaWZvcm5pYSxDPVVT\"]")
 assert_success "Patient grants consent" "$OUT"
 
 log "[4] Doctor updates after consent"
-OUT=$(invoke Doctor UpdateMedicalRecord '["P001","Blood pressure stable"]')
+OUT=$(invoke Doctor UpdateMedicalRecord "[\"${PID}\",\"Blood pressure stable\"]")
 assert_success "Doctor update with consent" "$OUT"
 
 log "[5] Patient queries full record"
-OUT=$(query Patient GetPatientRecord '["P001"]')
-assert_contains "Patient retrieves own record" "P001" "$OUT"
+OUT=$(query Patient GetPatientRecord "[\"${PID}\"]")
+assert_contains "Patient retrieves own record" "${PID}" "$OUT"
 assert_contains "Record contains diagnosis"    "Hypertension" "$OUT"
 assert_contains "Record contains doctor note"  "Blood pressure stable" "$OUT"
 
 log "[6] Doctor attempts to create record (unauthorized)"
-OUT=$(invoke Doctor CreatePatientRecord '["P002","Jane","28","Migraine"]')
+OUT=$(invoke Doctor CreatePatientRecord "[\"${PID2}\",\"Jane\",\"28\",\"Migraine\"]")
 assert_failure "Unauthorized create rejected" "unauthorized|HospitalMSP|Error|failed" "$OUT"
 
 # ── Results ───────────────────────────────────────────────────────────────────
