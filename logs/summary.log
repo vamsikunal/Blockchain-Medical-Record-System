@@ -1,0 +1,26 @@
+=== Test Suite: Medical Record Chaincode ===
+    Logs: logs/20260402_025502
+
+[1] Hospital creates patient record P177507870217164
+  PASS — Hospital creates P177507870217164
+[2] Doctor attempts update without consent
+  [retry 1/3] UpdateMedicalRecord failed, retrying in 1s...
+  [retry 2/3] UpdateMedicalRecord failed, retrying in 2s...
+  [retry 3/3] UpdateMedicalRecord failed, retrying in 3s...
+  PASS — Doctor rejected without consent
+[3] Patient grants consent to Doctor Admin
+  PASS — Patient grants consent
+[4] Doctor updates after consent
+  PASS — Doctor update with consent
+[5] Patient queries full record
+  PASS — Patient retrieves own record
+  PASS — Record contains diagnosis
+  PASS — Record contains doctor note
+[6] Doctor attempts to create record (unauthorized)
+  [retry 1/3] CreatePatientRecord failed, retrying in 1s...
+  [retry 2/3] CreatePatientRecord failed, retrying in 2s...
+  [retry 3/3] CreatePatientRecord failed, retrying in 3s...
+  PASS — Unauthorized create rejected
+
+=== Results: 8 passed, 0 failed, 0 skipped ===
+    Full logs: logs/20260402_025502

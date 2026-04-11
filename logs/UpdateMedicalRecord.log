@@ -1,0 +1,5 @@
+Error: endorsement failure during invoke. response: status:500 message:"unauthorized: doctor eDUwOTo6Q049QWRtaW5AZG9jdG9yLmNvbSxPVT1hZG1pbixMPVNhbiBGcmFuY2lzY28sU1Q9Q2FsaWZvcm5pYSxDPVVTOjpDTj1jYS5kb2N0b3IuY29tLE89ZG9jdG9yLmNvbSxMPVNhbiBGcmFuY2lzY28sU1Q9Q2FsaWZvcm5pYSxDPVVT does not have consent from patient P177507870217164" 
+[34m2026-04-02 02:55:17.738 IST 0001 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [661b8320f3d84041e169a5cc7a146b0784922b47731d13381da5c4029640d961] committed with status (VALID) at localhost:8051
+[34m2026-04-02 02:55:17.738 IST 0002 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [661b8320f3d84041e169a5cc7a146b0784922b47731d13381da5c4029640d961] committed with status (VALID) at localhost:7051
+[34m2026-04-02 02:55:17.759 IST 0003 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [661b8320f3d84041e169a5cc7a146b0784922b47731d13381da5c4029640d961] committed with status (VALID) at localhost:9051
+[34m2026-04-02 02:55:17.759 IST 0004 INFO[0m [chaincodeCmd] [34;1mchaincodeInvokeOrQuery[0m -> Chaincode invoke successful. result: status:200 

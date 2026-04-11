@@ -23,14 +23,22 @@ State database: CouchDB.
    cd Blockchain-Medical-Record-System
    ```
 
-2. **Wipe existing data and generate crypto material**
+2. **Install Prerequisites (Optional)**
+   ```bash
+   bash install.sh
+   sudo apt install docker-compose
+   source ~/.bashrc
+   ```
+   **Note:** Log out and log back in for docker group changes to take effect.
+
+3. **Wipe existing data and generate crypto material**
    ```bash
    cd network
    docker-compose down -v --remove-orphans
    bash scripts/generate.sh
    ```
 
-3. **Start the network**
+4. **Start the network**
    ```bash
    bash scripts/start-network.sh
    ```
@@ -40,7 +48,7 @@ State database: CouchDB.
    - Create channel `medicalchannel`
    - Join all 3 peers to the channel
 
-4. **Deploy the Chaincode (CCaaS)**
+5. **Deploy the Chaincode (CCaaS)**
    ```bash
    cd ../scripts
    bash deploy-chaincode.sh
@@ -52,7 +60,7 @@ State database: CouchDB.
    - Approves and Commits the chaincode on the channel
    - Initializes the ledger
 
-5. **Run the Test Suite**
+6. **Run the Test Suite**
    Verify the medical record functions (create, read, doctor consent loops) across the 3 independent peers:
 
    ```bash

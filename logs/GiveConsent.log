@@ -1,0 +1,4 @@
+[34m2026-04-02 02:55:14.711 IST 0001 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [efdcbf99d0c1614c2f6004035803927ca3f4d5d69778f35f1e43e9f1c1bca5d4] committed with status (VALID) at localhost:7051
+[34m2026-04-02 02:55:14.739 IST 0003 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [efdcbf99d0c1614c2f6004035803927ca3f4d5d69778f35f1e43e9f1c1bca5d4] committed with status (VALID) at localhost:9051
+[34m2026-04-02 02:55:14.739 IST 0002 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [efdcbf99d0c1614c2f6004035803927ca3f4d5d69778f35f1e43e9f1c1bca5d4] committed with status (VALID) at localhost:8051
+[34m2026-04-02 02:55:14.739 IST 0004 INFO[0m [chaincodeCmd] [34;1mchaincodeInvokeOrQuery[0m -> Chaincode invoke successful. result: status:200 

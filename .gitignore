@@ -21,8 +21,6 @@ channel-artifacts/
 docker-compose-*.yaml
 fablo-target/
 .fablo/
-logs/
-*.log
 .env
 .env.local
 .env.*.local
